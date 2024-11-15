@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 
-#define MAX_RESPONSE_SIZE 256
+#define MAX_RESPONSE_SIZE 1024
 
 // Struct for parser output
 typedef struct {
@@ -14,5 +14,14 @@ typedef struct {
 } CommandResponse;
 
 CommandResponse parse_command(const char* input);
+
+int initialize_database();
+void close_database();
+
+//declare handler for commands
+CommandResponse handle_set(const char *key, const char *value);
+CommandResponse handle_update(const char *key, const char *value);
+CommandResponse handle_get(const char *key);
+CommandResponse handle_delete(const char *key);
 
 #endif // END COMMAND PARSER

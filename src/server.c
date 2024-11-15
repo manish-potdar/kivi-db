@@ -106,6 +106,13 @@ void *worker(void *args) {
 
       CommandResponse command_response = parse_command(buffer);
 
+      //handle success insert
+      if(command_response.success){
+
+        printf("\nKey-value pair set..\n");
+        send(new_socket, command_response.data, strlen(command_response.data), 0);
+      }
+
       // handle exit command
       if(command_response.exit) {
         printf("\nClient exit request..\n");
@@ -140,6 +147,12 @@ int main(int argc, char const *argv[]) {
   int port = atoi(argv[1]);
   int thread_pool_size = atoi(argv[2]);
 
+  //init db
+ if (initialize_database() != 0) {
+        fprintf(stderr, "Failed to initialize database.\n");
+        exit(1);
+    }
+
   // create threads
   pthread_t worker_threads[thread_pool_size];
 
@@ -169,6 +182,13 @@ int main(int argc, char const *argv[]) {
   address.sin_family = AF_INET;
   address.sin_addr.s_addr = INADDR_ANY;
   address.sin_port = htons(port);
+  //socket reuse
+  int opt=1;
+  if(setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) <0)
+  {
+    perror("Rerused faield\n");
+    exit(1);
+  }
 
   // binding socket to a port (8080)
   if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
@@ -210,5 +230,6 @@ int main(int argc, char const *argv[]) {
   pthread_cond_destroy(&cond_var);
   pthread_mutex_destroy(&global_lock);
 
+  close_database();
   return 0;
 }

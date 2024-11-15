@@ -1,7 +1,7 @@
 # Compiler and flags
 CC = gcc
 CFLAGS = -g -Iinclude
-LDFLAGS = -lpthread
+LDFLAGS = -lpthread -lsqlite3
 
 # Directories
 SRC_DIR = src
@@ -13,7 +13,7 @@ DOCS_DIR = docs
 TARGET = $(BIN_DIR)/server
 
 # Source and object files
-SRCS = $(wildcard $(SRC_DIR)/*.c)
+SRCS = $(wildcard $(SRC_DIR)/*.c) $(SRC_DIR)/database.c
 OBJS = $(SRCS:$(SRC_DIR)/%.c=$(SRC_DIR)/%.o)
 
 # Default target
