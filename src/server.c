@@ -74,11 +74,13 @@ Task dequeue() {
 // worker thread to handle connected clients
 void *worker(void *args) {
 
-  while (true) {
+  // while (true) {
 
-    Task client = dequeue();
+    // Task client = dequeue();
+    Task *client = (Task*) args;
 
-    int new_socket = client.socket_fd;
+    int new_socket = client->socket_fd;
+    // int new_socket = client.socket_fd;
 
     char buffer[BUFFER_SIZE] = {0};
 
@@ -97,6 +99,13 @@ void *worker(void *args) {
 
       // read client data
       int bytes_read = read(new_socket, buffer, BUFFER_SIZE);
+      // close connection on nothing received
+      printf("bytes read: %d\n", bytes_read);
+      if(bytes_read == 0) {
+        printf("Client disconnected...\n");
+        break;
+      }
+
       buffer[bytes_read] = '\0';
 
       printf("recv from client: %s\n", buffer);
@@ -132,7 +141,7 @@ void *worker(void *args) {
     // closing client connection in loop`
     close(new_socket);
     printf("connection closed in loop\n");
-  }
+  // }
 
   return NULL;
 }
@@ -140,7 +149,7 @@ void *worker(void *args) {
 int main(int argc, char const *argv[]) {
 
   if (argc != 3) {
-    printf("usage: ./server <port> <thread_pool_size>\n");
+    printf("usage: ./server <port> <max_connections>\n");
     exit(1);
   }
 
@@ -154,14 +163,14 @@ int main(int argc, char const *argv[]) {
     }
 
   // create threads
-  pthread_t worker_threads[thread_pool_size];
+  // pthread_t worker_threads[thread_pool_size];
 
-  for (int i = 0; i < thread_pool_size; i++) {
-    if (pthread_create(worker_threads + i, NULL, worker, NULL)) {
-      perror("thread pool creation error");
-      exit(2);
-    }
-  }
+  // for (int i = 0; i < thread_pool_size; i++) {
+  //   if (pthread_create(worker_threads + i, NULL, worker, NULL)) {
+  //     perror("thread pool creation error");
+  //     exit(2);
+  //   }
+  // }
 
   // initialize locks
   pthread_cond_init(&cond_var, NULL);
@@ -210,11 +219,11 @@ int main(int argc, char const *argv[]) {
   // accepting connections
   while (1) {
 
-    Task client;
+    Task *client = malloc(sizeof(Task));
 
     // accept client and setup connection
-    if ((client.socket_fd =
-             accept(server_fd, (struct sockaddr *)&client.address,
+    if ((client->socket_fd =
+             accept(server_fd, (struct sockaddr *)&client->address,
                     (socklen_t *)&addrlen)) < 0) {
       perror("accept failed");
       close(server_fd);
@@ -223,7 +232,19 @@ int main(int argc, char const *argv[]) {
     printf("new incoming client\n");
 
     // enqueue task to queue so that threads can pickup
-    enqueue(client);
+    // enqueue(client);
+
+    // create a new thread to handle client connection
+    pthread_t client_thread;
+    if (pthread_create(&client_thread, NULL, &worker, (void *)client) != 0) {
+      perror("thread creation failed\n");
+      free(client);
+      close(server_fd);
+      exit(1);
+    }
+
+    // detach thread so that it cleans up itself
+    pthread_detach(client_thread);
   }
 
   // destroy locks
