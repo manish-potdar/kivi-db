@@ -5,6 +5,7 @@ LDFLAGS = -lpthread -lsqlite3
 
 # Directories
 SRC_DIR = src
+OBJ_DIR = obj
 INCLUDE_DIR = include
 BIN_DIR = bin
 DOCS_DIR = docs
@@ -13,8 +14,8 @@ DOCS_DIR = docs
 TARGET = $(BIN_DIR)/server
 
 # Source and object files
-SRCS = $(wildcard $(SRC_DIR)/*.c) $(SRC_DIR)/database.c
-OBJS = $(SRCS:$(SRC_DIR)/%.c=$(SRC_DIR)/%.o)
+SRCS = $(wildcard $(SRC_DIR)/*.c)
+OBJS = $(SRCS:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 
 # Default target
 all: $(TARGET)
@@ -25,13 +26,14 @@ $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 	@echo "Build complete: $@"
 
-# Compile source files to object files
-$(SRC_DIR)/%.o: $(SRC_DIR)/%.c
+# Compile source files to object files in OBJ_DIR
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+	@mkdir -p $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # Clean up build artifacts
 clean:
-	rm -rf $(BIN_DIR) $(SRC_DIR)/*.o
+	rm -rf $(BIN_DIR) $(OBJ_DIR)
 	@echo "Cleaned up build artifacts."
 
 # Help target to display usage
