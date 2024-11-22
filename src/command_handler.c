@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sqlite3.h>
+#include <pthread.h>
 
  // path to databse file
 
@@ -57,6 +58,7 @@ CommandResponse parse_command(const char *input)
   char value[256] = {0};
 
   CommandResponse response = {.success = false, .exit = false};
+  pthread_mutex_t mutex;
 
   // Parse the input command
   int args = sscanf(input, "%s %s %[^\r\n]", command, key, value);

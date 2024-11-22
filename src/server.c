@@ -1,3 +1,6 @@
+#include "../include/command_handler.h"
+#include "../include/config.h"
+#include "../include/connect.h"
 #include <arpa/inet.h>
 #include <pthread.h>
 #include <stdbool.h>
@@ -5,7 +8,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include "../include/command_handler.h"
+
+#define CONFIG_FILE "server.conf"
 
 // #define PORT 8090
 #define BUFFER_SIZE 1024
@@ -76,71 +80,73 @@ void *worker(void *args) {
 
   // while (true) {
 
-    // Task client = dequeue();
-    Task *client = (Task*) args;
+  // Task client = dequeue();
+  Task *client = (Task *)args;
 
-    int new_socket = client->socket_fd;
-    // int new_socket = client.socket_fd;
+  int new_socket = client->socket_fd;
+  // int new_socket = client.socket_fd;
 
-    char buffer[BUFFER_SIZE] = {0};
+  char buffer[BUFFER_SIZE] = {0};
 
-    printf("Worker assigned to socket %d\n", new_socket);
-    char welcome_response[] = "Welcome to kivi db\r\n";
+  printf("Worker assigned to socket %d\n", new_socket);
+  char welcome_response[] = "Welcome to kivi db\r\n";
 
-    // sending welcome response
-    send(new_socket, welcome_response, strlen(welcome_response), 0);
+  // sending welcome response
+  send(new_socket, welcome_response, strlen(welcome_response), 0);
 
-    const char *request = "hello\r\n";
-    const char *response = "world\r\n";
+  const char *request = "hello\r\n";
+  const char *response = "world\r\n";
 
-    while (1) {
-      // clear buffer
-      memset(buffer, 0, sizeof(buffer));
+  while (1) {
+    // clear buffer
+    memset(buffer, 0, sizeof(buffer));
 
-      // read client data
-      int bytes_read = read(new_socket, buffer, BUFFER_SIZE);
-      // close connection on nothing received
-      printf("bytes read: %d\n", bytes_read);
-      if(bytes_read == 0) {
-        printf("Client disconnected...\n");
-        break;
-      }
-
-      buffer[bytes_read] = '\0';
-
-      printf("recv from client: %s\n", buffer);
-      int len = strlen(buffer);
-      printf("rev length: %ld\n", strlen(buffer));
-      printf("last chars: %d %d\n", buffer[bytes_read-1], buffer[bytes_read-2]);
-
-      CommandResponse command_response = parse_command(buffer);
-
-      //handle success insert
-      if(command_response.success){
-
-        printf("\nKey-value pair set..\n");
-        send(new_socket, command_response.data, strlen(command_response.data), 0);
-      }
-
-      // handle exit command
-      if(command_response.exit) {
-        printf("\nClient exit request..\n");
-        const char exit_response[4] = "bye\n";
-        send(new_socket, command_response.error, strlen(command_response.error), 0);
-        break;
-      }
-
-      // handle invalid command
-      if(!command_response.exit && !command_response.success) {
-        printf("Invalid command...\n");
-        send(new_socket, command_response.error, sizeof(command_response.error), 0);
-      }
-
+    // read client data
+    int bytes_read = read(new_socket, buffer, BUFFER_SIZE);
+    // close connection on nothing received
+    printf("bytes read: %d\n", bytes_read);
+    if (bytes_read <= 0) {
+      printf("Client disconnected...\n");
+      break;
     }
 
-    // closing client connection in loop`
-    close(new_socket);
-    printf("connection closed in loop\n");
+    buffer[bytes_read] = '\0';
+
+    printf("recv from client: %s\n", buffer);
+    int len = strlen(buffer);
+    printf("rev length: %ld\n", strlen(buffer));
+    printf("last chars: %d %d\n", buffer[bytes_read - 1],
+           buffer[bytes_read - 2]);
+
+    CommandResponse command_response = parse_command(buffer);
+
+    // handle success insert
+    if (command_response.success) {
+
+      printf("\nKey-value pair set..\n");
+      send(new_socket, command_response.data, strlen(command_response.data), 0);
+    }
+
+    // handle exit command
+    if (command_response.exit) {
+      printf("\nClient exit request..\n");
+      const char exit_response[4] = "bye\n";
+      send(new_socket, command_response.error, strlen(command_response.error),
+           0);
+      break;
+    }
+
+    // handle invalid command
+    if (!command_response.exit && !command_response.success) {
+      printf("Invalid command...\n");
+      send(new_socket, command_response.error, sizeof(command_response.error),
+           0);
+    }
+  }
+
+  // closing client connection in loop`
+  close(new_socket);
+  printf("connection closed in loop\n");
   // }
 
   return NULL;
@@ -148,19 +154,21 @@ void *worker(void *args) {
 
 int main(int argc, char const *argv[]) {
 
-  if (argc != 3) {
-    printf("usage: ./server <port> <max_connections>\n");
+  // if (argc != 3) {
+  //   printf("usage: ./server <port> <max_connections>\n");
+  //   exit(1);
+  // }
+  Config config = read_config(CONFIG_FILE);
+
+  // int port = atoi(argv[1]);
+  int port = config.port;
+  // int thread_pool_size = atoi(argv[2]);
+
+  // init db
+  if (initialize_database() != 0) {
+    fprintf(stderr, "Failed to initialize database.\n");
     exit(1);
   }
-
-  int port = atoi(argv[1]);
-  int thread_pool_size = atoi(argv[2]);
-
-  //init db
- if (initialize_database() != 0) {
-        fprintf(stderr, "Failed to initialize database.\n");
-        exit(1);
-    }
 
   // create threads
   // pthread_t worker_threads[thread_pool_size];
@@ -191,10 +199,9 @@ int main(int argc, char const *argv[]) {
   address.sin_family = AF_INET;
   address.sin_addr.s_addr = INADDR_ANY;
   address.sin_port = htons(port);
-  //socket reuse
-  int opt=1;
-  if(setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) <0)
-  {
+  // socket reuse
+  int opt = 1;
+  if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
     perror("Rerused faield\n");
     exit(1);
   }
@@ -213,6 +220,9 @@ int main(int argc, char const *argv[]) {
   }
 
   printf("server listening on port %d\n", port);
+
+  // connect to peer nodes on server startup
+  connect_to_peers(&config);
 
   int count = 0;
 
@@ -252,5 +262,10 @@ int main(int argc, char const *argv[]) {
   pthread_mutex_destroy(&global_lock);
 
   close_database();
+
+  // Cleanup connections on exit
+  cleanup_connections();
+  printf("Server shutting down...\n");
+
   return 0;
 }

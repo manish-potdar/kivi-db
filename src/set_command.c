@@ -1,4 +1,4 @@
-#include "command_handler.h"
+#include "../include/command_handler.h"
 #include <sqlite3.h>
 #include <stdio.h>
 #include <string.h>
@@ -19,6 +19,8 @@ CommandResponse handle_set(const char *key, const char *value) {
         if (sqlite3_step(stmt) == SQLITE_DONE) {
             strcpy(response.data, "DONE\r\n");
             response.success = true;
+            // send data to other nodes
+            // SYNC_SET key vale
         } else {
             snprintf(response.error, MAX_RESPONSE_SIZE, "Error: Key '%s' already exists.\r\n", key);
         }
