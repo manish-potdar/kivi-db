@@ -20,8 +20,11 @@ void close_database();
 
 //declare handler for commands
 CommandResponse handle_set(const char *key, const char *value);
+CommandResponse handle_sync_set(const char *key, const char *value);
 CommandResponse handle_update(const char *key, const char *value);
+CommandResponse handle_sync_update(const char *key, const char *value);
 CommandResponse handle_get(const char *key);
 CommandResponse handle_delete(const char *key);
+CommandResponse handle_sync_delete(const char *key);
 
 #endif // END COMMAND PARSER

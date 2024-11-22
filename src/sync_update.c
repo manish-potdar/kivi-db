@@ -5,7 +5,7 @@
 
 extern sqlite3 *db; // Declare external database connection
 
-CommandResponse handle_update(const char *key, const char *value) {
+CommandResponse handle_sync_update(const char *key, const char *value) {
     CommandResponse response = {.success = false, .exit = false};
     const char *update_query = "UPDATE key_value_store SET value = ? WHERE key = ?;";
     sqlite3_stmt *stmt;
@@ -20,6 +20,7 @@ CommandResponse handle_update(const char *key, const char *value) {
             if (sqlite3_changes(db) > 0) {
                 strcpy(response.data, "Updated successfully.\r\n");
                 response.success = true;
+                handle_sync_update(key, value);
             } else {
                 strcpy(response.error, "Error: Key not found.\r\n");
             }
