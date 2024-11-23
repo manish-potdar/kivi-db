@@ -16,6 +16,7 @@ extern PeerConnection peer_socket_connections[MAX_NODES];
 
 // Function declarations
 void connect_to_peers(const Config *config);
+void connect_to_peers_with_retry(const Config *config);
 void cleanup_connections();
 
 #endif

@@ -262,7 +262,8 @@ int main(int argc, char const *argv[]) {
   log_message("server listening on port %d\n", port);
 
   // connect to peer nodes on server startup
-  connect_to_peers(&config);
+  // connect_to_peers(&config);
+  connect_to_peers_with_retry(&config);
 
   int count = 0;
 
