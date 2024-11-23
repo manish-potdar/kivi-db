@@ -100,7 +100,7 @@ CommandResponse parse_command(const char *input) {
     return response;
   } else {
     // invalid command
-    strcpy(response.error, "Error: Invalid command.\n");
+    strcpy(response.error, "Error: Invalid command.\r\n");
     response.success = false;
     response.data[0] = '\0'; // indicating no data to return
     response.exit = false;
