@@ -1,4 +1,4 @@
-#include "command_handler.h"
+#include "../include/command_handler.h"
 #include <sqlite3.h>
 #include <stdio.h>
 #include <string.h>
@@ -19,7 +19,6 @@ CommandResponse handle_sync_delete(const char *key) {
             if (sqlite3_changes(db) > 0) {
                 snprintf(response.data, MAX_RESPONSE_SIZE, "DELETED %s\r\n", key);
                 response.success = true;
-                handle_sync_delete(key);
             } else {
                 strcpy(response.error, "Error: Key not found.\r\n");
             }

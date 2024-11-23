@@ -8,6 +8,7 @@
 
 // Global array for peer socket file descriptors
 int peer_sockets[MAX_NODES] = {0};
+PeerConnection peer_socket_connections[MAX_NODES] = {{0, 0} };
 
 // Function to get the IP address of the current node
 void get_self_ip(char *self_ip, size_t size) {
@@ -79,6 +80,8 @@ void connect_to_peers(const Config *config) {
     if (connect(sock, (struct sockaddr *)&peer_addr, sizeof(peer_addr)) == 0) {
       printf("Connected to peer: %s\n", config->node_ips[i]);
       peer_sockets[i] = sock; // Save the socket fd
+      peer_socket_connections[i].peer_socket_fd = sock;
+      strcpy(peer_socket_connections[i].peer_ip_addr, config->node_ips[i]);
     } else {
       perror("Failed to connect to peer");
       close(sock);

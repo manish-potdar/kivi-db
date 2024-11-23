@@ -1,4 +1,4 @@
-#include "command_handler.h"
+#include "../include/command_handler.h"
 #include <sqlite3.h>
 #include <stdio.h>
 #include <string.h>

@@ -1,4 +1,4 @@
-#include "command_handler.h"
+#include "../include/command_handler.h"
 #include <sqlite3.h>
 #include <stdio.h>
 #include <string.h>
@@ -20,7 +20,6 @@ CommandResponse handle_sync_update(const char *key, const char *value) {
             if (sqlite3_changes(db) > 0) {
                 strcpy(response.data, "Updated successfully.\r\n");
                 response.success = true;
-                handle_sync_update(key, value);
             } else {
                 strcpy(response.error, "Error: Key not found.\r\n");
             }

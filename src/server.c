@@ -1,12 +1,14 @@
 #include "../include/command_handler.h"
 #include "../include/config.h"
 #include "../include/connect.h"
+#include "../include/log.h"
 #include <arpa/inet.h>
 #include <pthread.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <syslog.h>
 #include <unistd.h>
 
 #define CONFIG_FILE "server.conf"
@@ -160,6 +162,9 @@ int main(int argc, char const *argv[]) {
   // }
   Config config = read_config(CONFIG_FILE);
 
+  // Open syslog connection
+  openlog("my_program", LOG_PID | LOG_CONS, LOG_USER);
+
   // int port = atoi(argv[1]);
   int port = config.port;
   // int thread_pool_size = atoi(argv[2]);
@@ -220,6 +225,7 @@ int main(int argc, char const *argv[]) {
   }
 
   printf("server listening on port %d\n", port);
+  log_message("server listening on port %d\n", port);
 
   // connect to peer nodes on server startup
   connect_to_peers(&config);
@@ -266,6 +272,9 @@ int main(int argc, char const *argv[]) {
   // Cleanup connections on exit
   cleanup_connections();
   printf("Server shutting down...\n");
+
+  // Close syslog connection
+  closelog();
 
   return 0;
 }

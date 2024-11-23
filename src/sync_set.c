@@ -20,9 +20,6 @@ CommandResponse handle_sync_set(const char *key, const char *value) {
         if (sqlite3_step(stmt) == SQLITE_DONE) {
             strcpy(response.data, "DONE\r\n");
             response.success = true;
-            handle_sync_set(key, value);
-            // send data to other nodes
-            // SYNC_SET key vale
         } else {
             snprintf(response.error, MAX_RESPONSE_SIZE, "Error: Key '%s' already exists.\r\n", key);
         }

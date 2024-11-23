@@ -1,12 +1,12 @@
 #include "../include/command_handler.h"
 #include "../include/database.h"
 // #include <cstdio>
+#include <pthread.h>
+#include <sqlite3.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-#include <sqlite3.h>
-#include <pthread.h>
-
+#include <syslog.h>
 
 extern sqlite3 *db; // db connection
 
@@ -50,8 +50,7 @@ extern sqlite3 *db; // db connection
 // static KeyValuePair store[10];
 // static int store_size = 0;
 
-CommandResponse parse_command(const char *input)
-{
+CommandResponse parse_command(const char *input) {
   char command[256] = {0};
   char key[256] = {0};
   char value[256] = {0};
@@ -65,31 +64,20 @@ CommandResponse parse_command(const char *input)
   printf("key: %s\n", key);
   printf("value: %s\n", value);
 
-  if (strcmp(command, "set") == 0 && args == 3)
-  {
-    
-    
+  if (strcmp(command, "set") == 0 && args == 3) {
+
     return handle_set(key, value);
-  }
-  else if (strcmp(command, "update") ==0 && args == 3){
-    
-    
+  } else if (strcmp(command, "update") == 0 && args == 3) {
+
     return handle_update(key, value);
-    
-  }
-  else if (strcmp(command, "get") == 0 && args >= 2)
-  {
-    
+
+  } else if (strcmp(command, "get") == 0 && args >= 2) {
+
     return handle_get(key);
-  }
-  else if (strcmp(command, "delete") == 0 && args >= 2)
-  {
-  
-    
+  } else if (strcmp(command, "delete") == 0 && args >= 2) {
+
     return handle_delete(key);
-  }
-  else if (strcmp(command, "exit") == 0)
-  {
+  } else if (strcmp(command, "exit") == 0) {
     // Handle "exit"
     strcpy(response.error, "Goodbye!\r\n");
     response.exit = true;
@@ -97,9 +85,19 @@ CommandResponse parse_command(const char *input)
     response.data[0] = '\0'; // indicating no data to return
 
     // return response; // Signal to close the connection
-  }
-  else
-  {
+  } else if (strcmp(command, "SYNC_SET") == 0 && args == 3) {
+    // handle sync_set command
+    CommandResponse response = handle_sync_set(key, value);
+    return response;
+  } else if (strcmp(command, "SYNC_UPDATE") == 0 && args == 3) {
+    // handle sync_update command
+    CommandResponse response = handle_sync_update(key, value);
+    return response;
+  } else if (strcmp(command, "SYNC_DELETE") == 0 && args == 3) {
+    // handle sync_delete command
+    CommandResponse response = handle_sync_delete(key);
+    return response;
+  } else {
     // invalid command
     strcpy(response.error, "Error: Invalid command.\n");
     response.success = false;
