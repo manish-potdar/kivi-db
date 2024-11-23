@@ -1,5 +1,6 @@
 #include "../include/command_handler.h"
 #include "../include/database.h"
+#include "../include/log.h"
 // #include <cstdio>
 #include <pthread.h>
 #include <sqlite3.h>
@@ -60,9 +61,9 @@ CommandResponse parse_command(const char *input) {
 
   // Parse the input command
   int args = sscanf(input, "%s %s %[^\r\n]", command, key, value);
-  printf("command: %s\n", command);
-  printf("key: %s\n", key);
-  printf("value: %s\n", value);
+  log_message("command: %s\n", command);
+  log_message("key: %s\n", key);
+  log_message("value: %s\n", value);
 
   if (strcmp(command, "set") == 0 && args == 3) {
 
@@ -93,7 +94,7 @@ CommandResponse parse_command(const char *input) {
     // handle sync_update command
     CommandResponse response = handle_sync_update(key, value);
     return response;
-  } else if (strcmp(command, "SYNC_DELETE") == 0 && args == 3) {
+  } else if (strcmp(command, "SYNC_DELETE") == 0 && args == 2) {
     // handle sync_delete command
     CommandResponse response = handle_sync_delete(key);
     return response;

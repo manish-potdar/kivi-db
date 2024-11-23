@@ -9,5 +9,7 @@ typedef struct {
 } SyncResponse;
 
 SyncResponse sync_set(const char* key, const char* value);
+SyncResponse sync_update(const char* key, const char* value);
+SyncResponse sync_delete(const char* key);
 
 #endif // SYNC_H

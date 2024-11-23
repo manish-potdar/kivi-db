@@ -17,6 +17,8 @@
 #define BUFFER_SIZE 1024
 #define BACKLOG_QUEUE_SIZE 100
 
+int server_fd;
+
 // locks
 pthread_cond_t cond_var;
 pthread_mutex_t global_lock;
@@ -90,7 +92,7 @@ void *worker(void *args) {
 
   char buffer[BUFFER_SIZE] = {0};
 
-  printf("Worker assigned to socket %d\n", new_socket);
+  log_message("Worker assigned to socket %d\n", new_socket);
   char welcome_response[] = "Welcome to kivi db\r\n";
 
   // sending welcome response
@@ -106,18 +108,18 @@ void *worker(void *args) {
     // read client data
     int bytes_read = read(new_socket, buffer, BUFFER_SIZE);
     // close connection on nothing received
-    printf("bytes read: %d\n", bytes_read);
+    log_message("bytes read: %d\n", bytes_read);
     if (bytes_read <= 0) {
-      printf("Client disconnected...\n");
+      log_message("Client disconnected...\n");
       break;
     }
 
     buffer[bytes_read] = '\0';
 
-    printf("recv from client: %s\n", buffer);
+    log_message("recv from client: %s\n", buffer);
     int len = strlen(buffer);
-    printf("rev length: %ld\n", strlen(buffer));
-    printf("last chars: %d %d\n", buffer[bytes_read - 1],
+    log_message("rev length: %ld\n", strlen(buffer));
+    log_message("last chars: %d %d\n", buffer[bytes_read - 1],
            buffer[bytes_read - 2]);
 
     CommandResponse command_response = parse_command(buffer);
@@ -125,13 +127,13 @@ void *worker(void *args) {
     // handle success insert
     if (command_response.success) {
 
-      printf("\nKey-value pair set..\n");
+      log_message("\nKey-value pair set..\n");
       send(new_socket, command_response.data, strlen(command_response.data), 0);
     }
 
     // handle exit command
     if (command_response.exit) {
-      printf("\nClient exit request..\n");
+      log_message("\nClient exit request..\n");
       const char exit_response[4] = "bye\n";
       send(new_socket, command_response.error, strlen(command_response.error),
            0);
@@ -140,7 +142,7 @@ void *worker(void *args) {
 
     // handle invalid command
     if (!command_response.exit && !command_response.success) {
-      printf("Invalid command...\n");
+      log_message("Invalid command...\n");
       send(new_socket, command_response.error, sizeof(command_response.error),
            0);
     }
@@ -148,16 +150,47 @@ void *worker(void *args) {
 
   // closing client connection in loop`
   close(new_socket);
-  printf("connection closed in loop\n");
+  log_message("connection closed in loop\n");
   // }
 
   return NULL;
 }
 
+void handle_sigint(int sig) {
+  log_message("\nShutting down the server gracefully...\n");
+
+  // Close the server socket
+  if (server_fd > 0) {
+    close(server_fd);
+    log_message("Server socket closed.\n");
+  }
+
+  // Perform any additional cleanup here
+  // e.g., closing logs, releasing resources
+
+  // destroy locks
+  pthread_cond_destroy(&cond_var);
+  pthread_mutex_destroy(&global_lock);
+
+  close_database();
+
+  // Cleanup connections on exit
+  cleanup_connections();
+  log_message("Server shutting down...\n");
+
+  // Close syslog connection
+  closelog();
+
+  exit(0); // Exit the program
+}
+
 int main(int argc, char const *argv[]) {
 
+  // Register signal handler for SIGINT
+  signal(SIGINT, handle_sigint);
+
   // if (argc != 3) {
-  //   printf("usage: ./server <port> <max_connections>\n");
+  //   log_message("usage: ./server <port> <max_connections>\n");
   //   exit(1);
   // }
   Config config = read_config(CONFIG_FILE);
@@ -190,7 +223,7 @@ int main(int argc, char const *argv[]) {
   pthread_mutex_init(&global_lock, NULL);
 
   // create fds and socket addr
-  int server_fd, new_socket;
+  int new_socket;
   struct sockaddr_in address;
 
   int addrlen = sizeof(address);
@@ -224,7 +257,7 @@ int main(int argc, char const *argv[]) {
     exit(1);
   }
 
-  printf("server listening on port %d\n", port);
+  log_message("server listening on port %d\n", port);
   log_message("server listening on port %d\n", port);
 
   // connect to peer nodes on server startup
@@ -245,7 +278,7 @@ int main(int argc, char const *argv[]) {
       close(server_fd);
       exit(1);
     }
-    printf("new incoming client\n");
+    log_message("new incoming client\n");
 
     // enqueue task to queue so that threads can pickup
     // enqueue(client);
@@ -271,7 +304,7 @@ int main(int argc, char const *argv[]) {
 
   // Cleanup connections on exit
   cleanup_connections();
-  printf("Server shutting down...\n");
+  log_message("Server shutting down...\n");
 
   // Close syslog connection
   closelog();

@@ -17,9 +17,9 @@ SyncResponse sync_set(const char* key, const char* value) {
 
     char command[512];
 
-    snprintf(command, sizeof(command), "SYNC_SET %s %s \r\n", key, value);
+    snprintf(command, sizeof(command), "SYNC_SET %s %s\r\n", key, value);
     log_message("Running command %s\n", command);
-    printf("Running command %s\n", command);
+    log_message("Running command %s\n", command);
 
     SyncResponse response;
     response.sync_success = 0;
@@ -65,9 +65,9 @@ SyncResponse sync_update(const char* key, const char* value) {
 
     char command[512];
 
-    snprintf(command, sizeof(command), "SYNC_UPDATE %s %s \r\n", key, value);
+    snprintf(command, sizeof(command), "SYNC_UPDATE %s %s\r\n", key, value);
     log_message("Running command %s\n", command);
-    printf("Running command %s\n", command);
+    log_message("Running command %s\n", command);
 
     SyncResponse response;
     response.sync_success = 0;
@@ -113,9 +113,9 @@ SyncResponse sync_delete(const char* key) {
 
     char command[512];
 
-    snprintf(command, sizeof(command), "SYNC_DELETE %s \r\n", key);
+    snprintf(command, sizeof(command), "SYNC_DELETE %s\r\n", key);
     log_message("Running command %s\n", command);
-    printf("Running command %s\n", command);
+    log_message("Running command %s\n", command);
 
     SyncResponse response;
     response.sync_success = 0;

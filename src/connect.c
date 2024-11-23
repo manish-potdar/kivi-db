@@ -1,4 +1,5 @@
 #include "../include/connect.h"
+#include "../include/log.h"
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <stdio.h>
@@ -50,12 +51,12 @@ void get_self_ip(char *self_ip, size_t size) {
 void connect_to_peers(const Config *config) {
   char self_ip[INET_ADDRSTRLEN];
   get_self_ip(self_ip, sizeof(self_ip));
-  printf("Node IP: %s\n", self_ip);
+  log_message("Node IP: %s\n", self_ip);
 
   for (int i = 0; i < config->num_nodes; i++) {
     // Skip connection to self
     if (strcmp(self_ip, config->node_ips[i]) == 0) {
-      printf("Skipping self-connection for IP: %s\n", self_ip);
+      log_message("Skipping self-connection for IP: %s\n", self_ip);
       continue;
     }
 
@@ -76,9 +77,9 @@ void connect_to_peers(const Config *config) {
       continue;
     }
 
-    printf("Connectng to %s\n", config->node_ips[i]);
+    log_message("Connectng to %s\n", config->node_ips[i]);
     if (connect(sock, (struct sockaddr *)&peer_addr, sizeof(peer_addr)) == 0) {
-      printf("Connected to peer: %s\n", config->node_ips[i]);
+      log_message("Connected to peer: %s\n", config->node_ips[i]);
       peer_sockets[i] = sock; // Save the socket fd
       peer_socket_connections[i].peer_socket_fd = sock;
       strcpy(peer_socket_connections[i].peer_ip_addr, config->node_ips[i]);
