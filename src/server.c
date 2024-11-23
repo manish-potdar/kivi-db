@@ -10,6 +10,7 @@
 #include <string.h>
 #include <syslog.h>
 #include <unistd.h>
+#include <signal.h>
 
 #define CONFIG_FILE "server.conf"
 
