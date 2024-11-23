@@ -18,7 +18,6 @@ CommandResponse handle_update(const char *key, const char *value) {
   } else {
     sqlite3_bind_text(stmt, 1, value, -1, SQLITE_STATIC);
     sqlite3_bind_text(stmt, 2, key, -1, SQLITE_STATIC);
-    handle_set(key, value);
 
     if (sqlite3_step(stmt) == SQLITE_DONE) {
       if (sqlite3_changes(db) > 0) {
