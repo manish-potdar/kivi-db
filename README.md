@@ -50,6 +50,6 @@ Refer to [protocol.md](./docs/protocol.md) for detailed responses and error hand
 ## **Project Details**  
 **Course:** CS744 - Design and Engineering of Computing Systems  
 **Instructor:** Prof. Purushottam Kulkarni  
-**Authors:** Mohammad Aasim, Aditya Upadhye
+**Authors:** Mohammad Aasim, Aditya Upadhye, Manish Potdar
 
 ---
